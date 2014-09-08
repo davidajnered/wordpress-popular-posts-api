@@ -21,9 +21,13 @@ class Core extends \WordpressPopularPosts
         $options = array_merge($this->defaults, $options);
 
         // Save requested limit for later
-        $limit = $options['limit'];
+        // If limits not set (WPP value) but posts_per_page (WP value) is, then use posts_per_page as limit.
+        $limit = isset($options['limit']) && !isset($options['posts_per_page']) ? $options['limit'] : $options['posts_per_page'];
+        $offset = isset($options['offset']) ? $options['offset'] : 0;
+
         // Update limit passed to query with the offset.
-        $options['limit'] = $this->getLimit($options);
+        $options['limit'] = $this->getLimit($limit, $offset);
+
         // Query Wordpress Popular Posts
         $results = $this->_query_posts($options);
 
@@ -46,11 +50,10 @@ class Core extends \WordpressPopularPosts
      * @param array $options
      * @return string $limit
      */
-    private function getLimit($options)
+    private function getLimit($limit, $offset)
     {
-        $limit = $options['posts_per_page'];
-        if (isset($options['offset']) && is_numeric($options['offset'])) {
-            $limit = $options['offset'] . ',' . $limit;
+        if ($offset != '0' && is_numeric($offset)) {
+            $limit = $offset . ',' . $limit;
         }
 
         return $limit;
